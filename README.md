@@ -11,8 +11,6 @@ rewards given actions.
 - [Research paper](https://www.nature.com/articles/s41586-025-08744-2)
 - [Project website](https://github.com/danijar/dreamerv3)
 
-![DreamerV3 Method Diagram](https://user-images.githubusercontent.com/2111293/217355673-4abc0ce5-1a4b-4366-a08d-64754289d659.png)
-
 ## DreamerV3 with MineRL v1.0.2
 The update of DreamerV3 with MineRL from v0.4.4 to v1.0.2:
 - MineRL version from v0.4.4 to v1.0.2
