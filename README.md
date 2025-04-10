@@ -7,9 +7,9 @@ DreamerV3 learns a world model from experiences and uses it to train an actor
 critic policy from imagined trajectories. The world model encodes sensory
 inputs into categorical representations and predicts future representations and
 rewards given actions.
-- [Research paper][paper]
-- [Project website][website]
-- [Twitter summary][tweet]
+
+- [Research paper](https://www.nature.com/articles/s41586-025-08744-2)
+- [Project website](https://github.com/danijar/dreamerv3)
 
 ![DreamerV3 Method Diagram](https://user-images.githubusercontent.com/2111293/217355673-4abc0ce5-1a4b-4366-a08d-64754289d659.png)
 
