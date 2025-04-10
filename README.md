@@ -1,12 +1,8 @@
 # DreamerV3 with MineRL from v0.4.4 to v1.0.2
 
----
-
 DreamerV3 is based on MineRL v0.4.4 for experiments. This repository is based on the DreamerV3 algorithm and updates the <font color=yellow>MineRL version from v0.4.4 to v1.0.2</font>. Its image resolution, action space, and number of tasks are closer to real scenes, and the research significance is greater.
 
 ## DreamerV3 with MineRL v0.4.4
-
----
 DreamerV3 learns a world model from experiences and uses it to train an actor
 critic policy from imagined trajectories. The world model encodes sensory
 inputs into categorical representations and predicts future representations and
@@ -18,8 +14,6 @@ rewards given actions.
 ![DreamerV3 Method Diagram](https://user-images.githubusercontent.com/2111293/217355673-4abc0ce5-1a4b-4366-a08d-64754289d659.png)
 
 ## DreamerV3 with MineRL v1.0.2
-
----
 The update of DreamerV3 with MineRL from v0.4.4 to v1.0.2:
 - MineRL version from v0.4.4 to v1.0.2
 - Solve the version dependency library conflict problem
@@ -30,8 +24,6 @@ The update of DreamerV3 with MineRL from v0.4.4 to v1.0.2:
 >The DreamerV3 code with MineRL v1.0.2 has been tested on Linux and Windows and requires Python 3.11+.
 
 ## Install
-
----
 
 Install script:
 ```sh
@@ -51,8 +43,6 @@ python dreamerv3/main.py \
 ```
 
 ## Tips
-
----
 
 - All config options are listed in `dreamerv3/configs.yaml` and you can
   override them as flags from the command line.
@@ -78,7 +68,5 @@ python dreamerv3/main.py \
 
 
 ## Disclaimer
-
----
 
 If you have any questions, please feel free to ask.
