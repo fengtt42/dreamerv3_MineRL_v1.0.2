@@ -41,11 +41,10 @@ docker rm <contain_id>
 - Docker training script:
 ```sh
 docker run -it --rm -v ~/logdir:/root/logdir -v ~/dreamerv3_MineRL_v1.0.2:/app dreamer:v1  /bin/bash
-python dreamerv3/main.py \
-  --logdir ~/logdir/Minecraft/{timestamp} \
-  --configs minecraft debug \
-  --task minecraft_diamond
+python dreamerv3/main.py --logdir ~/logdir/Minecraft/{timestamp} --configs minecraft debug --task minecraft_diamond
 ```
+>docker run -it --rm -v ~/logdir:/root/logdir -v ~/ftt/dreamerv3_MineRL_v1.0.2:/app dreamer:v1  /bin/bash
+>python dreamerv3/main.py --logdir ~/logdir/ftt/{timestamp} --configs minecraft debug --task minecraft_diamond
 
 ## Tips
 
