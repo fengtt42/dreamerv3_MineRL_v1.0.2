@@ -25,20 +25,27 @@ The update of DreamerV3 with MineRL from v0.4.4 to v1.0.2:
 
 ## Install
 
-Install script:
+- Docker install script:
 ```sh
-git clone https://github.com/fengtt42/dreamerv3_MineRL_v1.0.2.git
+git clone https://github.com/fengtt42/dreamerv3_MineRL_v1.0.2
 cd dreamerv3_MineRL_v1.0.2
 docker build -f Dockerfile -t dreamer:v1 .
-docker run -it --rm -v ~/logdir:/root/logdir -v ~/dreamerv3_MineRL_v1.0.2:/app dreamer:v1  /bin/bash
 ```
 
-Training script:
+- Docker test script:
+```shell
+docker run -it dreamer:v1 /bin/bash
+docker ps -a
+docker stop <contain_id>
+docker rm <contain_id>
+```
 
+- Docker training script:
 ```sh
+docker run -it --rm -v ~/logdir:/root/logdir -v ~/dreamerv3_MineRL_v1.0.2:/app dreamer:v1  /bin/bash
 python dreamerv3/main.py \
-  --logdir ~/logdir/{timestamp} \
-  --configs minecraft debug\
+  --logdir ~/logdir/Minecraft/{timestamp} \
+  --configs minecraft debug \
   --task minecraft_diamond
 ```
 
