@@ -171,7 +171,7 @@ class MinecraftBase(embodied.Env):
   def __init__(
       self, actions,
       repeat=1,
-      size=(64, 64),
+      size=(360, 640),
       break_speed=100.0,
       gamma=10.0,
       sticky_attack=30,
@@ -218,7 +218,10 @@ class MinecraftBase(embodied.Env):
     self._equip_enum = self._gymenv.observation_space[
         'equipped_items']['mainhand']['type'].values.tolist()
     self._obs_space = self.obs_space
-
+    # ===== debug =====
+    # 在 MinecraftBase 初始化后打印空间定义
+    print('Obs space image shape:', self.obs_space['image'].shape)
+    # ===== debug ======
     # Actions
     actions = self._insert_defaults(actions)
     self._action_names = tuple(actions.keys())
@@ -367,7 +370,7 @@ class MinecraftBase(embodied.Env):
 
 class MineRLEnv(EnvSpec):
 
-  def __init__(self, resolution=(64, 64), break_speed=50):
+  def __init__(self, resolution=(360, 640), break_speed=50):
     self.resolution = resolution
     self.break_speed = break_speed
     super().__init__(name='MineRLEnv-v1')
@@ -395,7 +398,7 @@ class MineRLEnv(EnvSpec):
 
   def create_observables(self):
     return [
-        handlers.POVObservation(self.resolution),
+        handlers.POVObservation((self.resolution[1], self.resolution[0])),
         handlers.FlatInventoryObservation(mc.ALL_ITEMS),
         handlers.EquippedItemObservation(
             mc.ALL_ITEMS, _default='air', _other='apple'),
