@@ -75,3 +75,9 @@ python dreamerv3/main.py --logdir ~/logdir/Minecraft/{timestamp} --configs minec
 ## Disclaimer
 
 If you have any questions, please feel free to ask.
+
+## 进度
+
+### 4.11
+
+跑通了640 * 360的网络结构。问题是：非常慢！！！
