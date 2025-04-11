@@ -38,45 +38,58 @@ class Agent(embodied.jax.Agent):
     exclude = ('is_first', 'is_last', 'is_terminal', 'reward')
     enc_space = {k: v for k, v in obs_space.items() if k not in exclude}
     dec_space = {k: v for k, v in obs_space.items() if k not in exclude}
+
+    # 构建观测编码器 (处理原始输入)
     self.enc = {
         'simple': rssm.Encoder,
     }[config.enc.typ](enc_space, **config.enc[config.enc.typ], name='enc')
+
+    # 构建动态模型 (状态转移预测)
     self.dyn = {
         'rssm': rssm.RSSM,
     }[config.dyn.typ](act_space, **config.dyn[config.dyn.typ], name='dyn')
+
+    # 构建解码器 (从潜在状态重建观测)
     self.dec = {
         'simple': rssm.Decoder,
     }[config.dec.typ](dec_space, **config.dec[config.dec.typ], name='dec')
 
+    # 特征拼接函数 (合并确定性与随机状态)
     self.feat2tensor = lambda x: jnp.concatenate([
         nn.cast(x['deter']),
         nn.cast(x['stoch'].reshape((*x['stoch'].shape[:-2], -1)))], -1)
 
+    # 奖励预测头,是否终止连续预测头
     scalar = elements.Space(np.float32, ())
     binary = elements.Space(bool, (), 0, 2)
     self.rew = embodied.jax.MLPHead(scalar, **config.rewhead, name='rew')
     self.con = embodied.jax.MLPHead(binary, **config.conhead, name='con')
 
+    # 策略网络 (动作分布生成)
     d1, d2 = config.policy_dist_disc, config.policy_dist_cont
     outs = {k: d1 if v.discrete else d2 for k, v in act_space.items()}
     self.pol = embodied.jax.MLPHead(
         act_space, outs, **config.policy, name='pol')
 
+    # 值网络与慢速值网络 (用于稳定训练)
     self.val = embodied.jax.MLPHead(scalar, **config.value, name='val')
     self.slowval = embodied.jax.SlowModel(
         embodied.jax.MLPHead(scalar, **config.value, name='slowval'),
         source=self.val, **config.slowvalue)
 
+    # 归一化模块 (返回值/价值/优势值)
     self.retnorm = embodied.jax.Normalize(**config.retnorm, name='retnorm')
     self.valnorm = embodied.jax.Normalize(**config.valnorm, name='valnorm')
     self.advnorm = embodied.jax.Normalize(**config.advnorm, name='advnorm')
 
+    # 优化器配置
     self.modules = [
         self.dyn, self.enc, self.dec, self.rew, self.con, self.pol, self.val]
     self.opt = embodied.jax.Optimizer(
         self.modules, self._make_opt(**config.opt), summary_depth=1,
         name='opt')
 
+    # 损失权重配置
     scales = self.config.loss_scales.copy()
     rec = scales.pop('rec')
     scales.update({k: rec for k in dec_space})
@@ -84,10 +97,12 @@ class Agent(embodied.jax.Agent):
 
   @property
   def policy_keys(self):
+    # 返回策略网络参数的正则表达式
     return '^(enc|dyn|dec|pol)/'
 
   @property
   def ext_space(self):
+    # 定义扩展的回放缓冲区空间
     spaces = {}
     spaces['consec'] = elements.Space(np.int32)
     spaces['stepid'] = elements.Space(np.uint8, 20)
@@ -113,6 +128,17 @@ class Agent(embodied.jax.Agent):
     return self.init_policy(batch_size)
 
   def policy(self, carry, obs, mode='train'):
+    """
+        执行策略前向传播，生成动作
+        Args:
+            carry: 隐藏状态 (enc/dyn/dec的隐藏状态)
+            obs: 当前观测数据 (dict of tensors)
+            mode: 运行模式 ('train' 或 'eval')
+        Returns:
+            carry: 更新后的隐藏状态
+            act: 生成的动作
+            out: 附加输出 (如有限性检查)
+    """
     # ========== Debug1: Check the Input ==========
     print("OBS::", obs)
     # ========================================
@@ -138,6 +164,7 @@ class Agent(embodied.jax.Agent):
     return carry, act, out
 
   def train(self, carry, data):
+    """执行单次训练步骤"""
     carry, obs, prevact, stepid = self._apply_replay_context(carry, data)
     metrics, (carry, entries, outs, mets) = self.opt(
         self.loss, carry, obs, prevact, training=True, has_aux=True)
@@ -157,6 +184,7 @@ class Agent(embodied.jax.Agent):
     return carry, outs, metrics
 
   def loss(self, carry, obs, prevact, training):
+    """计算总损失 (世界模型 + 想象 + 回放)"""
     enc_carry, dyn_carry, dec_carry = carry
     reset = obs['is_first']
     B, T = reset.shape
