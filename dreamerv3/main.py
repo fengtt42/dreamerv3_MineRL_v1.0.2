@@ -2,6 +2,7 @@ import importlib
 import os
 import pathlib
 import sys
+# functools.partial的作用：对函数部分参数进行固定，在不改变原始函数的情况下，进行各类参数适配。
 from functools import partial as bind
 
 folder = pathlib.Path(__file__).parent
@@ -17,9 +18,8 @@ import ruamel.yaml as yaml
 
 
 def main(argv=None):
-  from .agent import Agent
-  [elements.print(line) for line in Agent.banner]
 
+  # argv更新系统的default参数
   configs = elements.Path(folder / 'configs.yaml').read()
   configs = yaml.YAML(typ='safe').load(configs)
   parsed, other = elements.Flags(configs=['defaults']).parse_known(argv)
@@ -30,13 +30,12 @@ def main(argv=None):
   config = config.update(logdir=(
       config.logdir.format(timestamp=elements.timestamp())))
 
+  # 分布式训练设置
   if 'JOB_COMPLETION_INDEX' in os.environ:
     config = config.update(replica=int(os.environ['JOB_COMPLETION_INDEX']))
-  print('Replica:', config.replica, '/', config.replicas)
 
+  # 日志文件创新并保存更新后的默认参数
   logdir = elements.Path(config.logdir)
-  print('Logdir:', logdir)
-  print('Run script:', config.script)
   if not config.script.endswith(('_env', '_replay')):
     logdir.mkdir()
     config.save(logdir / 'config.yaml')
@@ -44,6 +43,7 @@ def main(argv=None):
   def init():
     elements.timer.global_timer.enabled = config.logger.timer
 
+  # 客户端和服务器端分布式通信框架初始化
   portal.setup(
       errfile=config.errfile and logdir / 'error',
       clientkw=dict(logging_color='cyan'),
@@ -52,6 +52,7 @@ def main(argv=None):
       ipv6=config.ipv6,
   )
 
+  # 构建运行参数
   args = elements.Config(
       **config.run,
       replica=config.replica,
@@ -65,6 +66,7 @@ def main(argv=None):
       replay_context=config.replay_context,
   )
 
+  # 根据脚本类型选择运行模式
   if config.script == 'train':
     embodied.run.train(
         bind(make_agent, config),
@@ -124,6 +126,7 @@ def main(argv=None):
     raise NotImplementedError(config.script)
 
 
+# 观测空间和动作空间全是环境给定的参数，Agent本身模块并不涉及
 def make_agent(config):
   from .agent import Agent
   env = make_env(config, 0)
@@ -149,6 +152,8 @@ def make_agent(config):
   ))
 
 
+# metrics.jsonl文件输出的是Agent的实时输出，具体为什么这么划分得看Agent的输出格式。scores.jsonl包含的过滤score之后的文件
+# scope文件夹中是写入logdir目录下的全部文件
 def make_logger(config):
   step = elements.Counter()
   logdir = config.logdir
@@ -208,7 +213,7 @@ def make_replay(config, folder, mode='train'):
 
   return embodied.replay.Replay(**kwargs)
 
-
+# 对minecraft进行参数更新和初始化
 def make_env(config, index, **overrides):
   suite, task = config.task.split('_', 1)
   if suite == 'memmaze':

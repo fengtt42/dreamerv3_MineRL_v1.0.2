@@ -5,7 +5,7 @@
 # export CUDA_VISIBLE_DEVICES=0
 # xvfb-run python dreamerv3/main.py --logdir logdir/{timestamp} --configs minecraft debug --task minecraft_diamond
 
-FROM ghcr.io/nvidia/driver:7c5f8932-550.144.03-ubuntu24.04
+FROM ghcr.io/nvidia/driver:1ca43390-535.230.02-ubuntu22.04
 
 # System
 ENV DEBIAN_FRONTEND=noninteractive
@@ -26,6 +26,7 @@ ENV PATH="/venv/bin:$PATH"
 RUN pip install -U pip setuptools
 
 # Envs
+ENV USE_BAZEL_VERSION=8.0.0
 RUN wget -O - https://gist.githubusercontent.com/danijar/ca6ab917188d2e081a8253b3ca5c36d3/raw/install-dmlab.sh | sh
 RUN pip install ale_py==0.9.0 autorom[accept-rom-license]==0.6.1
 RUN pip install procgen_mirror
