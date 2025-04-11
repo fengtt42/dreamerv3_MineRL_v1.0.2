@@ -32,7 +32,7 @@ defaults:
     crafter: {size: [64, 64], logs: False}
     atari100k: {size: [64, 64], repeat: 4, sticky: False, gray: False, actions: needed, lives: unused, noops: 30, autostart: False, resize: pillow, clip_reward: False}
     dmlab: {size: [64, 64], repeat: 4, episodic: True, use_seed: True}
-    minecraft: {size: [64, 64], break_speed: 100.0, logs: False, length: 36000}
+    minecraft: {size: [640, 360], break_speed: 100.0, logs: False, length: 36000}
     dmc: {size: [64, 64], repeat: 1, proprio: True, image: True, camera: -1}
     loconav: {size: [64, 64], repeat: 1, camera: -1}
 

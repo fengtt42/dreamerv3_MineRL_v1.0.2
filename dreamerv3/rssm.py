@@ -236,6 +236,9 @@ class Encoder(nj.Module):
       assert all(x.dtype == jnp.uint8 for x in imgs)
       x = nn.cast(jnp.concatenate(imgs, -1), force=True) / 255 - 0.5
       x = x.reshape((-1, *x.shape[bdims:]))
+      # ========== Debug ==========
+      print("After Cast Layer", x.shape)
+      # ===========================
       for i, depth in enumerate(self.depths):
         if self.outer and i == 0:
           x = self.sub(f'cnn{i}', nn.Conv2D, depth, K, **self.kw)(x)
@@ -244,11 +247,31 @@ class Encoder(nj.Module):
         else:
           x = self.sub(f'cnn{i}', nn.Conv2D, depth, K, **self.kw)(x)
           B, H, W, C = x.shape
-          x = x.reshape((B, H // 2, 2, W // 2, 2, C)).max((2, 4))
+          # ========== Debug ==========
+          print(f"After CNN{i}", x.shape)
+          # ===========================
+          # x = x.reshape((B, H // 2, 2, W // 2, 2, C)).max((2, 4))
+          if i is not 3:
+            x = x.reshape((B, H // 2, 2, W // 2, 2, C)).max((2, 4))
+          else:
+            x = x.reshape((B, H // 2, 2, W // 3, 3, C)).max((2, 4))
+        # ========== Debug ==========
+        print(f"After CNN{i}'s reshape", x.shape)
+        # ===========================
         x = nn.act(self.act)(self.sub(f'cnn{i}norm', nn.Norm, self.norm)(x))
-      assert 3 <= x.shape[-3] <= 16, x.shape
-      assert 3 <= x.shape[-2] <= 16, x.shape
+        # ========== Debug ==========
+        print(f"After CNN{i}'s reshape and NORM", x.shape)
+        # ===========================
+      # ========= Debug ============
+      # assert 3 <= x.shape[-3] <= 16, x.shape
+      # assert 3 <= x.shape[-2] <= 16, x.shape
+      assert 3 <= x.shape[-3] <= 50, x.shape
+      assert 3 <= x.shape[-2] <= 50, x.shape
+      # ===========================
       x = x.reshape((x.shape[0], -1))
+      # ========== Debug ==========
+      print(f"X's final shape", x.shape)
+      # ===========================
       outs.append(x)
 
     x = jnp.concatenate(outs, -1)
@@ -313,10 +336,22 @@ class Decoder(nj.Module):
       recons.update(outs)
 
     if self.imgkeys:
-      factor = 2 ** (len(self.depths) - int(bool(self.outer)))
-      minres = [int(x // factor) for x in self.imgres]
-      assert 3 <= minres[0] <= 16, minres
-      assert 3 <= minres[1] <= 16, minres
+      factor = []
+      factor.append(2 ** (len(self.depths) - int(bool(self.outer))))
+      factor.append(2 ** (len(self.depths) - int(bool(self.outer)) - 1) * 3)
+      # ======== Debug ============
+      print("factor is:",factor)
+      print("Original Minres", [x for x in self.imgres])
+      # =======================
+      minres = [int(x // factor[i]) for i, x in enumerate(self.imgres)]
+      # ========= Debug ============
+      # assert 3 <= minres[0] <= 16, minres
+      # assert 3 <= minres[1] <= 16, minres
+      assert 3 <= minres[0] <= 50, minres
+      assert 3 <= minres[1] <= 50, minres
+      print(type(minres))
+      print(minres)
+      # =====================
       shape = (*minres, self.depths[-1])
       if self.bspace:
         u, g = math.prod(shape), self.bspace
@@ -335,13 +370,28 @@ class Decoder(nj.Module):
       else:
         x = self.sub('space', nn.Linear, shape, **kw)(inp)
         x = nn.act(self.act)(self.sub('spacenorm', nn.Norm, self.norm)(x))
+      # ======= Debug =======
+      print("x.shape",x.shape)
+      # ==============
       for i, depth in reversed(list(enumerate(self.depths[:-1]))):
         if self.strided:
           kw = dict(**self.kw, transp=True)
           x = self.sub(f'conv{i}', nn.Conv2D, depth, K, 2, **kw)(x)
         else:
-          x = x.repeat(2, -2).repeat(2, -3)
+          # ======= Debug =======
+          print(f"x.shape before decoder's reshpae",x.shape)
+          # ==============
+          if i == 0:
+            x = x.repeat(3, -2).repeat(2, -3)
+          else:  
+            x = x.repeat(2, -2).repeat(2, -3)
+          # ======= Debug =======
+          print(f"x.shape after decoder's reshpae",x.shape)
+          # ==============
           x = self.sub(f'conv{i}', nn.Conv2D, depth, K, **self.kw)(x)
+          # ======= Debug =======
+          print(f"x.shape after decoder's conv{i}",x.shape)
+          # ==============
         x = nn.act(self.act)(self.sub(f'conv{i}norm', nn.Norm, self.norm)(x))
       if self.outer:
         kw = dict(**self.kw, outscale=self.outscale)
