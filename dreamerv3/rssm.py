@@ -226,6 +226,13 @@ class Encoder(nj.Module):
     if self.imgkeys:
       K = self.kernel
       imgs = [obs[k] for k in sorted(self.imgkeys)]
+
+      # ========== Debug1: Check the Input ==========
+      for idx, img in enumerate(imgs):
+          print(
+              f"图像键 {sorted(self.imgkeys)[idx]} 原始形状: {img.shape} | 数据类型: {img.dtype} "
+          )
+      # ========================================
       assert all(x.dtype == jnp.uint8 for x in imgs)
       x = nn.cast(jnp.concatenate(imgs, -1), force=True) / 255 - 0.5
       x = x.reshape((-1, *x.shape[bdims:]))

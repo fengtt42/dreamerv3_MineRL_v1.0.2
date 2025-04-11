@@ -129,6 +129,9 @@ def make_agent(config):
   env = make_env(config, 0)
   notlog = lambda k: not k.startswith('log/')
   obs_space = {k: v for k, v in env.obs_space.items() if notlog(k)}
+  # ==Debug1==
+  print("OBS_SPACE from main.make_agent", obs_space)
+  # ==Debug1==
   act_space = {k: v for k, v in env.act_space.items() if k != 'reset'}
   env.close()
   if config.random_agent:
