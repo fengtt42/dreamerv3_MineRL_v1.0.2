@@ -65,19 +65,19 @@ class Diamond(embodied.Wrapper):
     actions = {
         ## Repair
         **BASIC_ACTIONS,
-        'craft_planks': dict(craft='planks'),
-        'craft_stick': dict(craft='stick'),
-        'craft_crafting_table': dict(craft='crafting_table'),
-        'place_crafting_table': dict(place='crafting_table'),
-        'craft_wooden_pickaxe': dict(nearbyCraft='wooden_pickaxe'),
-        'craft_stone_pickaxe': dict(nearbyCraft='stone_pickaxe'),
-        'craft_iron_pickaxe': dict(nearbyCraft='iron_pickaxe'),
-        'equip_stone_pickaxe': dict(equip='stone_pickaxe'),
-        'equip_wooden_pickaxe': dict(equip='wooden_pickaxe'),
-        'equip_iron_pickaxe': dict(equip='iron_pickaxe'),
-        'craft_furnace': dict(nearbyCraft='furnace'),
-        'place_furnace': dict(place='furnace'),
-        'smelt_iron_ingot': dict(nearbySmelt='iron_ingot'),
+        # 'craft_planks': dict(craft='planks'),
+        # 'craft_stick': dict(craft='stick'),
+        # 'craft_crafting_table': dict(craft='crafting_table'),
+        # 'place_crafting_table': dict(place='crafting_table'),
+        # 'craft_wooden_pickaxe': dict(nearbyCraft='wooden_pickaxe'),
+        # 'craft_stone_pickaxe': dict(nearbyCraft='stone_pickaxe'),
+        # 'craft_iron_pickaxe': dict(nearbyCraft='iron_pickaxe'),
+        # 'equip_stone_pickaxe': dict(equip='stone_pickaxe'),
+        # 'equip_wooden_pickaxe': dict(equip='wooden_pickaxe'),
+        # 'equip_iron_pickaxe': dict(equip='iron_pickaxe'),
+        # 'craft_furnace': dict(nearbyCraft='furnace'),
+        # 'place_furnace': dict(place='furnace'),
+        # 'smelt_iron_ingot': dict(nearbySmelt='iron_ingot'),
     }
     self.rewards = [
         CollectReward('log', once=1),
@@ -118,9 +118,22 @@ BASIC_ACTIONS = {
     'left': dict(left=1),
     'right': dict(right=1),
     'jump': dict(jump=1, forward=1),
-    'place_dirt': dict(place='dirt'),
 }
 
+# BASIC_ACTIONS = {
+#     'noop': dict(),
+#     'attack': dict(attack=1),
+#     'turn_up': dict(camera=(-15, 0)),
+#     'turn_down': dict(camera=(15, 0)),
+#     'turn_left': dict(camera=(0, -15)),
+#     'turn_right': dict(camera=(0, 15)),
+#     'forward': dict(forward=1),
+#     'back': dict(back=1),
+#     'left': dict(left=1),
+#     'right': dict(right=1),
+#     'jump': dict(jump=1, forward=1),
+#     'place_dirt': dict(place='dirt'),
+# }
 
 class CollectReward:
 
@@ -164,11 +177,36 @@ class HealthReward:
 class MinecraftBase(embodied.Env):
 
   LOCK = threading.Lock()
-  ## Repair
-  NOOP = dict(
-      camera=(0, 0), forward=0, back=0, left=0, right=0, attack=0, sprint=0,
-      jump=0, sneak=0, craft='none', nearbyCraft='none', nearbySmelt='none',
-      place='none', equip='none')
+  # NOOP = dict(
+  #     camera=(0, 0), forward=0, back=0, left=0, right=0, attack=0, sprint=0,
+  #     jump=0, sneak=0, craft='none', nearbyCraft='none', nearbySmelt='none',
+  #     place='none', equip='none')
+  NOOP = {
+      "ESC": 0,
+      "attack": 0,
+      "back": 0,
+      "camera": (0, 0),
+      "drop": 0,
+      "forward": 0,
+      "hotbar.1": 0,
+      "hotbar.2": 0,
+      "hotbar.3": 0,
+      "hotbar.4": 0,
+      "hotbar.5": 0,
+      "hotbar.6": 0,
+      "hotbar.7": 0,
+      "hotbar.8": 0,
+      "hotbar.9": 0,
+      "inventory": 0,
+      "jump": 0,
+      "left": 0,
+      "pickItem": 0,
+      "right": 0,
+      "sneak": 0,
+      "sprint": 0,
+      "swapHands": 0,
+      "use": 0,
+  }
 
   def __init__(
       self, actions,
@@ -223,6 +261,7 @@ class MinecraftBase(embodied.Env):
 
     # Actions
     actions = self._insert_defaults(actions)
+    print(actions)
     self._action_names = tuple(actions.keys())
     self._action_values = tuple(actions.values())
     message = f'Minecraft action space ({len(self._action_values)}):'
