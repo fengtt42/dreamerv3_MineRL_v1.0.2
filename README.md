@@ -81,3 +81,17 @@ If you have any questions, please feel free to ask.
 ### 4.11
 
 在dev分支上跑通了640*360的网络结构，问题是：非常慢！！！
+
+### 4.13
+
+搞清楚了0.4.4和1.0.2的action space差别，准备改了。
+
+存在一个问题就是：在0.4.4中 Diamond任务叫做MineRLObtainDiamond-V0,在1.0.2中Diamond任务叫做MineRLObtainDiamondShovel-V0
+
+具体如下：
+
+0.4.4
+![image](./assets/0.4.4_action_space.png)
+
+1.0.2
+![image](./assets/1.0.2_action_space.png)
