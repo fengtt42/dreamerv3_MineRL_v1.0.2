@@ -63,6 +63,7 @@ class Diamond(embodied.Wrapper):
 
   def __init__(self, *args, **kwargs):
     actions = {
+        ## Repair
         **BASIC_ACTIONS,
         'craft_planks': dict(craft='planks'),
         'craft_stick': dict(craft='stick'),
@@ -163,6 +164,7 @@ class HealthReward:
 class MinecraftBase(embodied.Env):
 
   LOCK = threading.Lock()
+  ## Repair
   NOOP = dict(
       camera=(0, 0), forward=0, back=0, left=0, right=0, attack=0, sprint=0,
       jump=0, sneak=0, craft='none', nearbyCraft='none', nearbySmelt='none',

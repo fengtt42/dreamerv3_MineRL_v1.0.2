@@ -95,3 +95,15 @@ If you have any questions, please feel free to ask.
 
 1.0.2
 ![image](./assets/1.0.2_action_space.png)
+
+1.0.2相对于0.4.4
+
+多了：drop, hotbar.1, hotbar.2, hotbar.3, hotbar.4, hotbar.5, hotbar.6, hotbar.7, hotbar.8, hotbar.9, inventory, pickItem, swapHands, use
+
+少了: craft, equip, nearbyCraft, nearbySmelt, place
+
+所以现在需要通过1.0.2多的，来将craft, equip, nearbyCraft, nearbySmelt, place组合出来。
+
+目前存在着的一个组合方案值得商榷。
+
+**新的问题**：Reward用作版本适配吗
