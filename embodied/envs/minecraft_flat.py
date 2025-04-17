@@ -9,6 +9,7 @@ np.float = float
 np.int = int
 np.bool = bool
 
+from minerl.herobraine.env_specs.obtain_specs import ObtainDiamondShovelEnvSpec
 from minerl.herobraine.env_spec import EnvSpec
 from minerl.herobraine.hero import handler
 from minerl.herobraine.hero import handlers
@@ -63,20 +64,21 @@ class Diamond(embodied.Wrapper):
 
   def __init__(self, *args, **kwargs):
     actions = {
+        ## Repair
         **BASIC_ACTIONS,
-        'craft_planks': dict(craft='planks'),
-        'craft_stick': dict(craft='stick'),
-        'craft_crafting_table': dict(craft='crafting_table'),
-        'place_crafting_table': dict(place='crafting_table'),
-        'craft_wooden_pickaxe': dict(nearbyCraft='wooden_pickaxe'),
-        'craft_stone_pickaxe': dict(nearbyCraft='stone_pickaxe'),
-        'craft_iron_pickaxe': dict(nearbyCraft='iron_pickaxe'),
-        'equip_stone_pickaxe': dict(equip='stone_pickaxe'),
-        'equip_wooden_pickaxe': dict(equip='wooden_pickaxe'),
-        'equip_iron_pickaxe': dict(equip='iron_pickaxe'),
-        'craft_furnace': dict(nearbyCraft='furnace'),
-        'place_furnace': dict(place='furnace'),
-        'smelt_iron_ingot': dict(nearbySmelt='iron_ingot'),
+        # 'craft_planks': dict(craft='planks'),
+        # 'craft_stick': dict(craft='stick'),
+        # 'craft_crafting_table': dict(craft='crafting_table'),
+        # 'place_crafting_table': dict(place='crafting_table'),
+        # 'craft_wooden_pickaxe': dict(nearbyCraft='wooden_pickaxe'),
+        # 'craft_stone_pickaxe': dict(nearbyCraft='stone_pickaxe'),
+        # 'craft_iron_pickaxe': dict(nearbyCraft='iron_pickaxe'),
+        # 'equip_stone_pickaxe': dict(equip='stone_pickaxe'),
+        # 'equip_wooden_pickaxe': dict(equip='wooden_pickaxe'),
+        # 'equip_iron_pickaxe': dict(equip='iron_pickaxe'),
+        # 'craft_furnace': dict(nearbyCraft='furnace'),
+        # 'place_furnace': dict(place='furnace'),
+        # 'smelt_iron_ingot': dict(nearbySmelt='iron_ingot'),
     }
     self.rewards = [
         CollectReward('log', once=1),
@@ -117,9 +119,22 @@ BASIC_ACTIONS = {
     'left': dict(left=1),
     'right': dict(right=1),
     'jump': dict(jump=1, forward=1),
-    'place_dirt': dict(place='dirt'),
 }
 
+# BASIC_ACTIONS = {
+#     'noop': dict(),
+#     'attack': dict(attack=1),
+#     'turn_up': dict(camera=(-15, 0)),
+#     'turn_down': dict(camera=(15, 0)),
+#     'turn_left': dict(camera=(0, -15)),
+#     'turn_right': dict(camera=(0, 15)),
+#     'forward': dict(forward=1),
+#     'back': dict(back=1),
+#     'left': dict(left=1),
+#     'right': dict(right=1),
+#     'jump': dict(jump=1, forward=1),
+#     'place_dirt': dict(place='dirt'),
+# }
 
 class CollectReward:
 
@@ -163,15 +178,41 @@ class HealthReward:
 class MinecraftBase(embodied.Env):
 
   LOCK = threading.Lock()
-  NOOP = dict(
-      camera=(0, 0), forward=0, back=0, left=0, right=0, attack=0, sprint=0,
-      jump=0, sneak=0, craft='none', nearbyCraft='none', nearbySmelt='none',
-      place='none', equip='none')
+  # NOOP = dict(
+  #     camera=(0, 0), forward=0, back=0, left=0, right=0, attack=0, sprint=0,
+  #     jump=0, sneak=0, craft='none', nearbyCraft='none', nearbySmelt='none',
+  #     place='none', equip='none')
+  NOOP = {
+      "ESC": 0,
+      "attack": 0,
+      "back": 0,
+      "camera": (0, 0),
+      "drop": 0,
+      "forward": 0,
+      "hotbar.1": 0,
+      "hotbar.2": 0,
+      "hotbar.3": 0,
+      "hotbar.4": 0,
+      "hotbar.5": 0,
+      "hotbar.6": 0,
+      "hotbar.7": 0,
+      "hotbar.8": 0,
+      "hotbar.9": 0,
+      "inventory": 0,
+      "jump": 0,
+      "left": 0,
+      "pickItem": 0,
+      "right": 0,
+      "sneak": 0,
+      "sprint": 0,
+      "swapHands": 0,
+      "use": 0,
+  }
 
   def __init__(
       self, actions,
       repeat=1,
-      size=(360, 640),
+      size=(640, 360),
       break_speed=100.0,
       gamma=10.0,
       sticky_attack=30,
@@ -215,15 +256,24 @@ class MinecraftBase(embodied.Env):
         self._inv_keys, self._inv_log_keys)
     self._step = 0
     self._max_inventory = None
-    self._equip_enum = self._gymenv.observation_space[
-        'equipped_items']['mainhand']['type'].values.tolist()
+    # === DEBUG ===
+    # print(self._gymenv.observation_space)
+    # === DEBUG ===
+    self._equip_enum = list(self._gymenv.observation_space[
+        'inventory'].keys())
+    # === DEBUG ===
+    # print(self._equip_enum)
+    # === DEBUG ===
     self._obs_space = self.obs_space
     # ===== debug =====
     # 在 MinecraftBase 初始化后打印空间定义
-    print('Obs space image shape:', self.obs_space['image'].shape)
+    # print('Obs space image shape:', self.obs_space['image'].shape)
     # ===== debug ======
     # Actions
     actions = self._insert_defaults(actions)
+    # ===== debug =====
+    print('All of the actions:',actions)
+    # ===== debug =====
     self._action_names = tuple(actions.keys())
     self._action_values = tuple(actions.values())
     message = f'Minecraft action space ({len(self._action_values)}):'
@@ -309,6 +359,8 @@ class MinecraftBase(embodied.Env):
       self._max_inventory = inventory
     else:
       self._max_inventory = np.maximum(self._max_inventory, inventory)
+    # with open ("output.txt", 'w') as f:
+    #   print("EQUIP_OBS IS:",obs,file=f)
     index = self._equip_enum.index(obs['equipped_items/mainhand/type'])
     equipped = np.zeros(len(self._equip_enum), np.float32)
     equipped[index] = 1.0
@@ -368,33 +420,40 @@ class MinecraftBase(embodied.Env):
     return actions
 
 
-class MineRLEnv(EnvSpec):
+class MineRLEnv(ObtainDiamondShovelEnvSpec):
 
-  def __init__(self, resolution=(360, 640), break_speed=50):
+  def __init__(self, resolution=(640, 360), break_speed=50):
     self.resolution = resolution
-    self.break_speed = break_speed
-    super().__init__(name='MineRLEnv-v1')
+    # self.break_speed = break_speed
+    super().__init__()
 
-  def create_agent_start(self):
-    return [BreakSpeedMultiplier(self.break_speed), handlers.agent.start.LowLevelInputsAgentStart() 
-            ,handlers.agent.start.GuiScale() ,handlers.agent.start.GammaSetting()
-            ,handlers.agent.start.FOVSetting() ,handlers.agent.start.FakeCursorSize()]
+# class MineRLEnv(EnvSpec):
 
-  def create_agent_handlers(self):
-    return []
+#   def __init__(self, resolution=(360, 640), break_speed=50):
+#     self.resolution = resolution
+#     self.break_speed = break_speed
+#     super().__init__(name='MineRLEnv-v1')
 
-  def create_server_world_generators(self):
-    return [handlers.DefaultWorldGenerator(force_reset=True)]
+#   def create_agent_start(self):
+#     return [BreakSpeedMultiplier(self.break_speed), handlers.agent.start.LowLevelInputsAgentStart() 
+#             ,handlers.agent.start.GuiScale() ,handlers.agent.start.GammaSetting()
+#             ,handlers.agent.start.FOVSetting() ,handlers.agent.start.FakeCursorSize()]
 
-  def create_server_quit_producers(self):
-    return [handlers.ServerQuitWhenAnyAgentFinishes()]
+#   def create_agent_handlers(self):
+#     return []
 
-  def create_server_initial_conditions(self):
-    return [
-        handlers.TimeInitialCondition(
-            allow_passage_of_time=True, start_time=0),
-        handlers.SpawningInitialCondition(allow_spawning=True),
-    ]
+#   def create_server_world_generators(self):
+#     return [handlers.DefaultWorldGenerator(force_reset=True)]
+
+#   def create_server_quit_producers(self):
+#     return [handlers.ServerQuitWhenAnyAgentFinishes()]
+
+#   def create_server_initial_conditions(self):
+#     return [
+#         handlers.TimeInitialCondition(
+#             allow_passage_of_time=True, start_time=0),
+#         handlers.SpawningInitialCondition(allow_spawning=True),
+#     ]
 
   def create_observables(self):
     return [
@@ -406,53 +465,53 @@ class MineRLEnv(EnvSpec):
         handlers.ObservationFromLifeStats(),
     ]
 
-  def create_actionables(self):
-    kw = dict(_other='none', _default='none')
-    return [
-        handlers.KeybasedCommandAction('forward', INVERSE_KEYMAP['forward']),
-        handlers.KeybasedCommandAction('back', INVERSE_KEYMAP['back']),
-        handlers.KeybasedCommandAction('left', INVERSE_KEYMAP['left']),
-        handlers.KeybasedCommandAction('right', INVERSE_KEYMAP['right']),
-        handlers.KeybasedCommandAction('jump', INVERSE_KEYMAP['jump']),
-        handlers.KeybasedCommandAction('sneak', INVERSE_KEYMAP['sneak']),
-        handlers.KeybasedCommandAction('attack', INVERSE_KEYMAP['attack']),
-        handlers.CameraAction(),
-        # handlers.PlaceBlock(['none'] + mc.ALL_ITEMS, **kw),
-        # handlers.EquipAction(['none'] + mc.ALL_ITEMS, **kw),
-        # handlers.CraftAction(['none'] + mc.ALL_ITEMS, **kw),
-        # handlers.CraftNearbyAction(['none'] + mc.ALL_ITEMS, **kw),
-        # handlers.SmeltItemNearby(['none'] + mc.ALL_ITEMS, **kw),
-    ]
+#   def create_actionables(self):
+#     kw = dict(_other='none', _default='none')
+#     return [
+#         handlers.KeybasedCommandAction('forward', INVERSE_KEYMAP['forward']),
+#         handlers.KeybasedCommandAction('back', INVERSE_KEYMAP['back']),
+#         handlers.KeybasedCommandAction('left', INVERSE_KEYMAP['left']),
+#         handlers.KeybasedCommandAction('right', INVERSE_KEYMAP['right']),
+#         handlers.KeybasedCommandAction('jump', INVERSE_KEYMAP['jump']),
+#         handlers.KeybasedCommandAction('sneak', INVERSE_KEYMAP['sneak']),
+#         handlers.KeybasedCommandAction('attack', INVERSE_KEYMAP['attack']),
+#         handlers.CameraAction(),
+#         # handlers.PlaceBlock(['none'] + mc.ALL_ITEMS, **kw),
+#         # handlers.EquipAction(['none'] + mc.ALL_ITEMS, **kw),
+#         # handlers.CraftAction(['none'] + mc.ALL_ITEMS, **kw),
+#         # handlers.CraftNearbyAction(['none'] + mc.ALL_ITEMS, **kw),
+#         # handlers.SmeltItemNearby(['none'] + mc.ALL_ITEMS, **kw),
+#     ]
 
-  def is_from_folder(self, folder):
-    return folder == 'none'
+#   def is_from_folder(self, folder):
+#     return folder == 'none'
 
-  def get_docstring(self):
-    return ''
+#   def get_docstring(self):
+#     return ''
 
-  def determine_success_from_rewards(self, rewards):
-    return True
+#   def determine_success_from_rewards(self, rewards):
+#     return True
 
-  def create_rewardables(self):
-    return []
+#   def create_rewardables(self):
+#     return []
 
-  def create_server_decorators(self):
-    return []
+#   def create_server_decorators(self):
+#     return []
 
-  def create_mission_handlers(self):
-    return []
+#   def create_mission_handlers(self):
+#     return []
 
-  def create_monitors(self):
-    return []
+#   def create_monitors(self):
+#     return []
 
 
-class BreakSpeedMultiplier(handler.Handler):
+# class BreakSpeedMultiplier(handler.Handler):
 
-  def __init__(self, multiplier=1.0):
-    self.multiplier = multiplier
+#   def __init__(self, multiplier=1.0):
+#     self.multiplier = multiplier
 
-  def to_string(self):
-    return f'break_speed({self.multiplier})'
+#   def to_string(self):
+#     return f'break_speed({self.multiplier})'
 
-  def xml_template(self):
-    return '<BreakSpeedMultiplier>{{multiplier}}</BreakSpeedMultiplier>'
+#   def xml_template(self):
+#     return '<BreakSpeedMultiplier>{{multiplier}}</BreakSpeedMultiplier>'
