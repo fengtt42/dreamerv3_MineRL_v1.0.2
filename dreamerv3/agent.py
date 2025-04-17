@@ -31,6 +31,7 @@ class Agent(embodied.jax.Agent):
   ]
 
   def __init__(self, obs_space, act_space, config):
+    
     self.obs_space = obs_space
     self.act_space = act_space
     self.config = config
@@ -51,12 +52,11 @@ class Agent(embodied.jax.Agent):
     self.feat2tensor = lambda x: jnp.concatenate([
         nn.cast(x['deter']),
         nn.cast(x['stoch'].reshape((*x['stoch'].shape[:-2], -1)))], -1)
-
+    
     scalar = elements.Space(np.float32, ())
     binary = elements.Space(bool, (), 0, 2)
     self.rew = embodied.jax.MLPHead(scalar, **config.rewhead, name='rew')
     self.con = embodied.jax.MLPHead(binary, **config.conhead, name='con')
-
     d1, d2 = config.policy_dist_disc, config.policy_dist_cont
     outs = {k: d1 if v.discrete else d2 for k, v in act_space.items()}
     self.pol = embodied.jax.MLPHead(
@@ -70,7 +70,6 @@ class Agent(embodied.jax.Agent):
     self.retnorm = embodied.jax.Normalize(**config.retnorm, name='retnorm')
     self.valnorm = embodied.jax.Normalize(**config.valnorm, name='valnorm')
     self.advnorm = embodied.jax.Normalize(**config.advnorm, name='advnorm')
-
     self.modules = [
         self.dyn, self.enc, self.dec, self.rew, self.con, self.pol, self.val]
     self.opt = embodied.jax.Optimizer(

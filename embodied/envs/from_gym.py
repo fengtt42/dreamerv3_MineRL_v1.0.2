@@ -10,9 +10,11 @@ class FromGym(embodied.Env):
 
   def __init__(self, env, obs_key='image', act_key='action', **kwargs):
     if isinstance(env, str):
+      print("CASE1:The name of env", env)
       self._env = gym.make(env, **kwargs)
     else:
       assert not kwargs, kwargs
+      print("CASE2:The name of env", env)
       self._env = env
     self._obs_dict = hasattr(self._env.observation_space, 'spaces')
     self._act_dict = hasattr(self._env.action_space, 'spaces')
