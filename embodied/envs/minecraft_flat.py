@@ -16,70 +16,10 @@ from minerl.herobraine.hero import handlers
 from minerl.herobraine.hero import mc
 from minerl.herobraine.hero.mc import INVERSE_KEYMAP
 
-
-class Wood(embodied.Wrapper):
-
-  def __init__(self, *args, **kwargs):
-    actions = BASIC_ACTIONS
-    self.rewards = [
-        CollectReward('log', repeated=1),
-        HealthReward(),
-    ]
-    length = kwargs.pop('length', 36000)
-    env = MinecraftBase(actions, *args, **kwargs)
-    env = embodied.wrappers.TimeLimit(env, length)
-    super().__init__(env)
-
-  def step(self, action):
-    obs = self.env.step(action)
-    reward = sum([fn(obs, self.env.inventory) for fn in self.rewards])
-    obs['reward'] = np.float32(reward)
-    return obs
-
-
-class Climb(embodied.Wrapper):
-
-  def __init__(self, *args, **kwargs):
-    actions = BASIC_ACTIONS
-    length = kwargs.pop('length', 36000)
-    env = MinecraftBase(actions, *args, **kwargs)
-    env = embodied.wrappers.TimeLimit(env, length)
-    super().__init__(env)
-    self._previous = None
-    self._health_reward = HealthReward()
-
-  def step(self, action):
-    obs = self.env.step(action)
-    x, y, z = obs['log/player_pos']
-    height = np.float32(y)
-    if obs['is_first']:
-      self._previous = height
-    reward = (height - self._previous) + self._health_reward(obs)
-    obs['reward'] = np.float32(reward)
-    self._previous = height
-    return obs
-
-
 class Diamond(embodied.Wrapper):
 
   def __init__(self, *args, **kwargs):
-    actions = {
-        ## Repair
-        **BASIC_ACTIONS,
-        # 'craft_planks': dict(craft='planks'),
-        # 'craft_stick': dict(craft='stick'),
-        # 'craft_crafting_table': dict(craft='crafting_table'),
-        # 'place_crafting_table': dict(place='crafting_table'),
-        # 'craft_wooden_pickaxe': dict(nearbyCraft='wooden_pickaxe'),
-        # 'craft_stone_pickaxe': dict(nearbyCraft='stone_pickaxe'),
-        # 'craft_iron_pickaxe': dict(nearbyCraft='iron_pickaxe'),
-        # 'equip_stone_pickaxe': dict(equip='stone_pickaxe'),
-        # 'equip_wooden_pickaxe': dict(equip='wooden_pickaxe'),
-        # 'equip_iron_pickaxe': dict(equip='iron_pickaxe'),
-        # 'craft_furnace': dict(nearbyCraft='furnace'),
-        # 'place_furnace': dict(place='furnace'),
-        # 'smelt_iron_ingot': dict(nearbySmelt='iron_ingot'),
-    }
+    actions = BASIC_ACTIONS
     self.rewards = [
         CollectReward('log', once=1),
         CollectReward('planks', once=1),
@@ -144,21 +84,6 @@ BASIC_ACTIONS = {
     'jump': dict(jump=1, forward=1),
 }
 
-# BASIC_ACTIONS = {
-#     'noop': dict(),
-#     'attack': dict(attack=1),
-#     'turn_up': dict(camera=(-15, 0)),
-#     'turn_down': dict(camera=(15, 0)),
-#     'turn_left': dict(camera=(0, -15)),
-#     'turn_right': dict(camera=(0, 15)),
-#     'forward': dict(forward=1),
-#     'back': dict(back=1),
-#     'left': dict(left=1),
-#     'right': dict(right=1),
-#     'jump': dict(jump=1, forward=1),
-#     'place_dirt': dict(place='dirt'),
-# }
-
 class CollectReward:
 
   def __init__(self, item, once=0, repeated=0):
@@ -201,10 +126,6 @@ class HealthReward:
 class MinecraftBase(embodied.Env):
 
   LOCK = threading.Lock()
-  # NOOP = dict(
-  #     camera=(0, 0), forward=0, back=0, left=0, right=0, attack=0, sprint=0,
-  #     jump=0, sneak=0, craft='none', nearbyCraft='none', nearbySmelt='none',
-  #     place='none', equip='none')
   NOOP = {
       "ESC": 0,
       "attack": 0,
@@ -448,34 +369,6 @@ class MineRLEnv(ObtainDiamondShovelEnvSpec):
     # self.break_speed = break_speed
     super().__init__()
 
-# class MineRLEnv(EnvSpec):
-
-#   def __init__(self, resolution=(360, 640), break_speed=50):
-#     self.resolution = resolution
-#     self.break_speed = break_speed
-#     super().__init__(name='MineRLEnv-v1')
-
-#   def create_agent_start(self):
-#     return [BreakSpeedMultiplier(self.break_speed), handlers.agent.start.LowLevelInputsAgentStart() 
-#             ,handlers.agent.start.GuiScale() ,handlers.agent.start.GammaSetting()
-#             ,handlers.agent.start.FOVSetting() ,handlers.agent.start.FakeCursorSize()]
-
-#   def create_agent_handlers(self):
-#     return []
-
-#   def create_server_world_generators(self):
-#     return [handlers.DefaultWorldGenerator(force_reset=True)]
-
-#   def create_server_quit_producers(self):
-#     return [handlers.ServerQuitWhenAnyAgentFinishes()]
-
-#   def create_server_initial_conditions(self):
-#     return [
-#         handlers.TimeInitialCondition(
-#             allow_passage_of_time=True, start_time=0),
-#         handlers.SpawningInitialCondition(allow_spawning=True),
-#     ]
-
   def create_observables(self):
     return [
         handlers.POVObservation((self.resolution[1], self.resolution[0])),
@@ -486,53 +379,20 @@ class MineRLEnv(ObtainDiamondShovelEnvSpec):
         handlers.ObservationFromLifeStats(),
     ]
 
-#   def create_actionables(self):
-#     kw = dict(_other='none', _default='none')
-#     return [
-#         handlers.KeybasedCommandAction('forward', INVERSE_KEYMAP['forward']),
-#         handlers.KeybasedCommandAction('back', INVERSE_KEYMAP['back']),
-#         handlers.KeybasedCommandAction('left', INVERSE_KEYMAP['left']),
-#         handlers.KeybasedCommandAction('right', INVERSE_KEYMAP['right']),
-#         handlers.KeybasedCommandAction('jump', INVERSE_KEYMAP['jump']),
-#         handlers.KeybasedCommandAction('sneak', INVERSE_KEYMAP['sneak']),
-#         handlers.KeybasedCommandAction('attack', INVERSE_KEYMAP['attack']),
-#         handlers.CameraAction(),
-#         # handlers.PlaceBlock(['none'] + mc.ALL_ITEMS, **kw),
-#         # handlers.EquipAction(['none'] + mc.ALL_ITEMS, **kw),
-#         # handlers.CraftAction(['none'] + mc.ALL_ITEMS, **kw),
-#         # handlers.CraftNearbyAction(['none'] + mc.ALL_ITEMS, **kw),
-#         # handlers.SmeltItemNearby(['none'] + mc.ALL_ITEMS, **kw),
-#     ]
-
-#   def is_from_folder(self, folder):
-#     return folder == 'none'
-
-#   def get_docstring(self):
-#     return ''
-
-#   def determine_success_from_rewards(self, rewards):
-#     return True
-
-#   def create_rewardables(self):
-#     return []
-
-#   def create_server_decorators(self):
-#     return []
-
-#   def create_mission_handlers(self):
-#     return []
-
-#   def create_monitors(self):
-#     return []
-
-
-# class BreakSpeedMultiplier(handler.Handler):
-
-#   def __init__(self, multiplier=1.0):
-#     self.multiplier = multiplier
-
-#   def to_string(self):
-#     return f'break_speed({self.multiplier})'
-
-#   def xml_template(self):
-#     return '<BreakSpeedMultiplier>{{multiplier}}</BreakSpeedMultiplier>'
+  def create_actionables(self):
+    kw = dict(_other='none', _default='none')
+    return [
+        handlers.KeybasedCommandAction('forward', INVERSE_KEYMAP['forward']),
+        handlers.KeybasedCommandAction('back', INVERSE_KEYMAP['back']),
+        handlers.KeybasedCommandAction('left', INVERSE_KEYMAP['left']),
+        handlers.KeybasedCommandAction('right', INVERSE_KEYMAP['right']),
+        handlers.KeybasedCommandAction('jump', INVERSE_KEYMAP['jump']),
+        handlers.KeybasedCommandAction('sneak', INVERSE_KEYMAP['sneak']),
+        handlers.KeybasedCommandAction('attack', INVERSE_KEYMAP['attack']),
+        handlers.CameraAction(),
+        handlers.PlaceBlock(['none'] + mc.ALL_ITEMS, **kw),
+        handlers.EquipAction(['none'] + mc.ALL_ITEMS, **kw),
+        handlers.CraftAction(['none'] + mc.ALL_ITEMS, **kw),
+        handlers.CraftNearbyAction(['none'] + mc.ALL_ITEMS, **kw),
+        handlers.SmeltItemNearby(['none'] + mc.ALL_ITEMS, **kw),
+    ]
