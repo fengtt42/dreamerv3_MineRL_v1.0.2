@@ -93,6 +93,7 @@ class Diamond(embodied.Wrapper):
         CollectReward('iron_ingot', once=1),
         CollectReward('iron_pickaxe', once=1),
         CollectReward('diamond', once=1),
+        CollectReward('diamond_shovel', once=1),
         HealthReward(),
     ]
     length = kwargs.pop('length', 36000)
@@ -101,9 +102,31 @@ class Diamond(embodied.Wrapper):
     super().__init__(env)
 
   def step(self, action):
+    # DEBUG
+    # with open ("output.txt", 'a') as f:
+    #   f.write("=============================================================================")
+    #   f.write("STEP:")
+    #   print(self.env._step, file=f)
+    #   f.write("ACTION SPACE:")
+    #   print(action, file=f)
+    #   f.write("=============================================================================")
+    #   print("\n", file=f)
+    # DEBUG
     obs = self.env.step(action)
+    with open ("inv.txt", 'w') as f:
+      print("INVENTORY IS",self.env.inventory, file=f)
     reward = sum([fn(obs, self.env.inventory) for fn in self.rewards])
     obs['reward'] = np.float32(reward)
+    # DEBUG
+    # with open ("output.txt", 'a') as f:
+    #   f.write("=============================================================================")
+    #   f.write("STEP:")
+    #   print(self.env._step, file=f)
+    #   f.write("OBESERVATION SPACE:")
+    #   print(obs, file=f)
+    #   f.write("=============================================================================")
+    #   print("\n", file=f)
+    # DEBUG
     return obs
 
 
@@ -348,8 +371,8 @@ class MinecraftBase(embodied.Env):
 
   def _obs(self, obs):
     # 合并所有原木到 'inventory/log'
-    obs['inventory/log'] = sum(obs.pop(f'inventory/{log}') for log in self.log_types)
-    obs['inventory/planks'] = sum(obs.pop(f'inventory/{plank}') for plank in self.plank_types)
+    obs['inventory/log'] = np.array(sum(obs[f'inventory/{log}'] for log in self.log_types), dtype=np.int32)
+    obs['inventory/planks'] = np.array(sum(obs[f'inventory/{plank}'] for plank in self.plank_types), dtype=np.int32)
     
     self._inventory = {
         k.split('/', 1)[1]: obs[k] for k in self._inv_keys
@@ -359,8 +382,6 @@ class MinecraftBase(embodied.Env):
       self._max_inventory = inventory
     else:
       self._max_inventory = np.maximum(self._max_inventory, inventory)
-    # with open ("output.txt", 'w') as f:
-    #   print("EQUIP_OBS IS:",obs,file=f)
     index = self._equip_enum.index(obs['equipped_items/mainhand/type'])
     equipped = np.zeros(len(self._equip_enum), np.float32)
     equipped[index] = 1.0
