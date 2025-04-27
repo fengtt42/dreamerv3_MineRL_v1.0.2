@@ -303,6 +303,8 @@ class MinecraftBase(embodied.Env):
       self._max_inventory = inventory
     else:
       self._max_inventory = np.maximum(self._max_inventory, inventory)
+    # with open ("output.txt", 'w') as f:
+    #   print("EQUIP_OBS IS:",obs,file=f)
     index = self._equip_enum.index(obs['equipped_items/mainhand/type'])
     equipped = np.zeros(len(self._equip_enum), np.float32)
     equipped[index] = 1.0
